@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31410.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SimphonyDataEntryHelper", "SimphonyDataEntryHelper\SimphonyDataEntryHelper.csproj", "{2002DE2F-CF64-4915-ABD2-7B0C1F026143}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2002DE2F-CF64-4915-ABD2-7B0C1F026143}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2002DE2F-CF64-4915-ABD2-7B0C1F026143}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2002DE2F-CF64-4915-ABD2-7B0C1F026143}.Debug|x64.ActiveCfg = Debug|x64
+		{2002DE2F-CF64-4915-ABD2-7B0C1F026143}.Debug|x64.Build.0 = Debug|x64
+		{2002DE2F-CF64-4915-ABD2-7B0C1F026143}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2002DE2F-CF64-4915-ABD2-7B0C1F026143}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2002DE2F-CF64-4915-ABD2-7B0C1F026143}.Release|x64.ActiveCfg = Release|x64
+		{2002DE2F-CF64-4915-ABD2-7B0C1F026143}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {757894AB-2400-48B7-93A1-FDCF11ECAF3E}
+	EndGlobalSection
+EndGlobal
