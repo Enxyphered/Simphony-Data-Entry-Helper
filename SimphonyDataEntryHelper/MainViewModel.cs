@@ -1,16 +1,70 @@
 ﻿using System;
 using System.Text;
+using System.Linq;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
+using System.Runtime.InteropServices;
 using TextCopy;
 using WindowsInput;
+using FlaUI.Core.AutomationElements;
+using FlaUI.UIA3;
+using FlaUI.Core.Definitions;
 using Code = WindowsInput.Native.VirtualKeyCode;
+using FlaUI.Core.Conditions;
+using System.Threading;
+using FlaUI.Core.Input;
+using FlaUI.Core;
 
 namespace SimphonyDataEntryHelper
 {
+    public class MenuItemEntryConfigViewModel : ViewModel
+    {
+        private int _delayBeforePaste;
+        public int DelayBeforePaste
+        {
+            get => _delayBeforePaste;
+            set
+            {
+                if (_delayBeforePaste == value)
+                    return;
+                _delayBeforePaste = value;
+                OnPropertyChanged(nameof(DelayBeforePaste));
+            }
+        }
+
+        private int _delayBeforeOk;
+        public int DelayBeforeOk
+        {
+            get => _delayBeforeOk;
+            set
+            {
+                if (_delayBeforeOk == value)
+                    return;
+                _delayBeforeOk = value;
+                OnPropertyChanged(nameof(DelayBeforeOk));
+            }
+        }
+
+        private int _delayBeforeAddAnotherItem;
+        public int DelayBeforeAddAnotherItem
+        {
+            get => _delayBeforeAddAnotherItem;
+            set
+            {
+                if (_delayBeforeAddAnotherItem == value)
+                    return;
+                _delayBeforeAddAnotherItem = value;
+                OnPropertyChanged(nameof(DelayBeforeAddAnotherItem));
+            }
+        }
+    }
+
     public class MainViewModel : ViewModel
     {
         private readonly InputSimulator _sim;
+        private CancellationTokenSource _cSouce;
+        private Application _app;
 
         private ModeViewModel _selectedMode;
         public ModeViewModel SelectedMode
@@ -51,9 +105,12 @@ namespace SimphonyDataEntryHelper
             }
         }
 
+        private CancellationToken token { get => _cSouce.Token; }
+
         public MainViewModel(InputSimulator sim)
         {
             _sim = sim;
+            _cSouce = new CancellationTokenSource();
             Modes = new ObservableCollection<ModeViewModel>()
             {
                 new ModeViewModel(){ Mode = Mode.CondimentEntry, Name = "Condiment Entry"},
@@ -65,49 +122,75 @@ namespace SimphonyDataEntryHelper
 
         public async Task Run()
         {
+            var process = Process.GetProcessesByName("EMC")[0];
+            _app = Application.Attach(process);
             while (true)
             {
                 await Task.Delay(50);
                 if (isKeyDown(Code.OEM_PERIOD) && isKeyDown(Code.CONTROL))
                 {
+                    _cSouce = new CancellationTokenSource();
                     await ActiveTask;
+                    await Task.Delay(100);
+                }
+                if (isKeyDown(Code.OEM_COMMA) && isKeyDown(Code.CONTROL))
+                {
+                    _cSouce.Cancel();
                 }
             }
         }
 
         private async Task MenuItemEntry()
         {
-            var cbText = await ClipboardService.GetTextAsync();
-            var items = cbText.Split(Environment.NewLine);
-            foreach (var item in items)
+            using (var automation = new UIA3Automation())
             {
-                await ClipboardService.SetTextAsync(cap(item).Trim());
-                await Task.Delay(1300);
-                keydown(Code.CONTROL);
-                keypress(Code.VK_V);
-                keyup(Code.CONTROL);
-                await Task.Delay(1300);
-                lmouse();
-                await Task.Delay(2500);
-                keypress(Code.SPACE);
+                var cbText = await ClipboardService.GetTextAsync();
+                var items = cbText.Split('\n');
+                foreach (var item in items)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+
+                    var window = _app.GetMainWindow(automation);
+                    var addMenuItemsWin = window.FindFirstChild(cf => cf.ByName("Add Menu Items"));
+                    var wiz = addMenuItemsWin.FindFirstChild(cf => cf.ByAutomationId("MasterWizard"));
+                    var addWithTemplate = wiz.FindFirstChild(cf => cf.ByName("Add Menu Item Master With Template"));
+                    var nameTextBox = addWithTemplate.FindFirstChild("textBoxName");
+                    var mainWizOk = wiz.FindFirstChild(cf => cf.ByName("OK"));
+                    nameTextBox.AsTextBox().Text = cap(item).Trim();
+                    mainWizOk.AsButton().Click();
+                    await Task.Delay(1300);
+                    var dialog = await element(automation.GetDesktop(), cf => cf.ByName("Item Added Successfully"));
+                    var dialogYes = await element(dialog, cf => cf.ByName("Yes"));
+                    dialogYes.AsButton().Click();
+                }
             }
         }
 
         private async Task CondimentEntry()
         {
-            var cbText = await ClipboardService.GetTextAsync();
-            var items = cbText.Split(Environment.NewLine);
-            foreach (var item in items)
+            using (var automation = new UIA3Automation())
             {
-                await ClipboardService.SetTextAsync(low(item).Trim());
-                await Task.Delay(1300);
-                keydown(Code.CONTROL);
-                keypress(Code.VK_V);
-                keyup(Code.CONTROL);
-                await Task.Delay(1300);
-                lmouse();
-                await Task.Delay(2500);
-                keypress(Code.SPACE);
+                var cbText = await ClipboardService.GetTextAsync();
+                var items = cbText.Split('\n');
+                foreach (var item in items)
+                {
+                    if (token.IsCancellationRequested)
+                        break;
+
+                    var window = _app.GetMainWindow(automation);
+                    var addMenuItemsWin = window.FindFirstChild(cf => cf.ByName("Add Menu Items"));
+                    var wiz = addMenuItemsWin.FindFirstChild(cf => cf.ByAutomationId("MasterWizard"));
+                    var addWithTemplate = wiz.FindFirstChild(cf => cf.ByName("Add Menu Item Master With Template"));
+                    var nameTextBox = addWithTemplate.FindFirstChild("textBoxName");
+                    var mainWizOk = wiz.FindFirstChild(cf => cf.ByName("OK"));
+                    nameTextBox.AsTextBox().Text = low(item).Trim();
+                    mainWizOk.AsButton().Click();
+                    await Task.Delay(1300);
+                    var dialog = await element(automation.GetDesktop(), cf => cf.ByName("Item Added Successfully"));
+                    var dialogYes = await element(dialog, cf => cf.ByName("Yes"));
+                    dialogYes.AsButton().Click();
+                }
             }
         }
 
@@ -144,6 +227,17 @@ namespace SimphonyDataEntryHelper
             }
         }
 
+        private async Task<AutomationElement> element(AutomationElement element, Func<ConditionFactory, ConditionBase> func)
+        {
+            AutomationElement output = null;
+            while (output is null)
+            {
+                output = element.FindFirstChild(func);
+                await Task.Delay(100);
+            }
+            return output;
+        }
+
         private string cap(string item)
         {
             bool capitalize = true;
@@ -168,6 +262,5 @@ namespace SimphonyDataEntryHelper
         private void keydown(Code code) => _sim.Keyboard.KeyDown(code);
         private void keyup(Code code) => _sim.Keyboard.KeyUp(code);
         private void keypress(Code code) => _sim.Keyboard.KeyPress(code);
-        private void lmouse() => _sim.Mouse.LeftButtonClick();
     }
 }
